@@ -5,20 +5,18 @@ const jwt = require("jsonwebtoken");
 
 require("dotenv").config();
 
-
 const SALT = Number(process.env.SALT);
 const secret = process.env.SECRET_KEY;
 
 //create users
 const register = async (req, res) => {
+  const { userName, email, password, isDel, avatar, role } = req.body;
 
-  const { userName , email, password , isDel , avatar , role } = req.body;
-
-    // email -> lowerCase
-  const saveEmail = email.toLowerCase();;
-    //encryption password
+  // email -> lowerCase
+  const saveEmail = email.toLowerCase();
+  //encryption password
   const savedPass = await bcrypt.hash(password, SALT);
-  
+
   const newUser = new userModel({
     userName,
     email: saveEmail,
@@ -26,7 +24,6 @@ const register = async (req, res) => {
     isDel,
     avatar,
     role,
-
   });
 
   newUser
@@ -40,34 +37,33 @@ const register = async (req, res) => {
     });
 };
 
-
 //login
 const login = (req, res) => {
-const {userName , email, password } = req.body;
+  const { userName, email, password } = req.body;
 
-// const saveEmail = email.toLowerCase();
+  // const saveEmail = email.toLowerCase();
 
   userModel
-  //email or userName...
-  // { $or: [ { <expression1> }, { <expression2> } ] }
-    .findOne({ $or: [ { email }, { userName } ] })
-    .then( async (result) => {
+    //email or userName...
+    // { $or: [ { <expression1> }, { <expression2> } ] }
+    .findOne({ $or: [{ email }, { userName }] })
+    .then(async (result) => {
       if (result) {
         if (result.email == email || result.userName == userName) {
-            const hashedPass = await bcrypt.compare(password, result.password);
-            console.log(hashedPass);
+          const hashedPass = await bcrypt.compare(password, result.password);
+          console.log(hashedPass);
 
           if (hashedPass) {
             const payload = {
               userName: result.userName,
               email: result.email,
               isDel: result.isDel,
-              role: result.role
+              role: result.role,
             };
             const token = await jwt.sign(payload, secret);
             console.log(hashedPass);
 
-            res.status(200).json({result , token});
+            res.status(200).json({ result, token });
           } else {
             res.status(400).json("invalid email or passowrd");
           }
@@ -84,13 +80,30 @@ const {userName , email, password } = req.body;
 //get all users
 const getAllUsers = (req, res) => {
   userModel
-  .find({})
-  .then((result) => {
-    res.status(200).json(result);
-  })
-  .catch((err) => {
-    res.status(400).json(err);
-  });
+    .find({})
+    .then((result) => {
+      res.status(200).json(result);
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
 };
 
-module.exports = { register , login , getAllUsers} 
+//delete user
+const deleteUser = (req, res) => {
+  const { id } = req.params;
+  userModel
+    .findByIdAndRemove(id, { $set: { isDel: true } })
+    .then((result) => {
+      if (result) {
+        res.status(200).json("deleted");
+      } else {
+        res.status(404).json("user not found");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+};
+
+module.exports = { register, login, getAllUsers, deleteUser };
