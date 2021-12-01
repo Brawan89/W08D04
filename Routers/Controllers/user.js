@@ -89,11 +89,12 @@ const getAllUsers = (req, res) => {
     });
 };
 
-//delete user
+//delete user (soft delete) 
+//
 const deleteUser = (req, res) => {
   const { id } = req.params;
   userModel
-    .findByIdAndRemove(id, { $set: { isDel: true } })
+    .findByIdAndUpdate(id,{ isDel: true } )
     .then((result) => {
       if (result) {
         res.status(200).json("deleted");
