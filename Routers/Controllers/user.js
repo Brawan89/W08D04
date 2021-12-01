@@ -12,11 +12,10 @@ const secret = process.env.SECRET_KEY;
 //create users
 const register = async (req, res) => {
 
-  const { userName , email, password , isDeleted , avatar , role } = req.body;
+  const { userName , email, password , isDel , avatar , role } = req.body;
 
-  // const saveName = userName.toLowerCase();
     // email -> lowerCase
-  const saveEmail = email.toLowerCase();
+  const saveEmail = email.toLowerCase();;
     //encryption password
   const savedPass = await bcrypt.hash(password, SALT);
   
@@ -44,20 +43,23 @@ const register = async (req, res) => {
 
 //login
 const login = (req, res) => {
-const { email, password } = req.body;
+const {userName , email, password } = req.body;
 
-const saveEmail = email.toLowerCase();
+// const saveEmail = email.toLowerCase();
 
   userModel
-    .findOne({ email: saveEmail })
+  //email or userName...
+  // { $or: [ { <expression1> }, { <expression2> } ] }
+    .findOne({ $or: [ { email }, { userName } ] })
     .then( async (result) => {
       if (result) {
-        if (result.email == email) {
+        if (result.email == email || result.userName == userName) {
             const hashedPass = await bcrypt.compare(password, result.password);
             console.log(hashedPass);
 
           if (hashedPass) {
             const payload = {
+              userName: result.userName,
               email: result.email,
               isDel: result.isDel,
               role: result.role
