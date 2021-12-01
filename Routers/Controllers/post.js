@@ -54,4 +54,22 @@ const getOnePost = (req, res) => {
     });
 };
 
-module.exports = { addPost, getAllPosts, getOnePost };
+// get post  by userId
+const getUserPost = (req, res) => {
+    const { users } = req.params;
+    postModel
+      .find({ users , isDel: false })
+      .then((result) => {
+        if (result) {
+          res.status(200).json(result);
+        } else {
+          res.status(400).json("This post not found");
+        }
+      })
+      .catch((err) => {
+        res.status(400).json(err);
+      });
+  };
+
+
+module.exports = { addPost, getAllPosts, getOnePost , getUserPost };
