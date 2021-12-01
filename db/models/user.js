@@ -4,7 +4,7 @@ const user = new mongoose.Schema({
   userName: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: mongoose.Schema.Types.ObjectId, ref: "Roles" },
+  role: { type: mongoose.Schema.Types.ObjectId, ref: "Role" },
   isDel: { type: Boolean, default: false },
   avatar: {
     type: String,
