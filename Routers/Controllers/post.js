@@ -71,5 +71,27 @@ const getUserPost = (req, res) => {
       });
   };
 
+  //update post
+const updatePost = (req , res) => {
+    const { _id , img , dec , users } = req.body;
+    postModel
+    .findByIdAndUpdate({ _id , users , isDel: false },{
+        img,
+        dec,
+    })
+    .then((result) => {
+        if (result) {
+            res.status(200).json(" update post");
+          } else {
+            res.status(400).json("This post not found");
+          }
+    })
+    .catch((error) => {
+        res.status(400).json(error)
+    })
+}
 
-module.exports = { addPost, getAllPosts, getOnePost , getUserPost };
+
+
+
+module.exports = { addPost, getAllPosts, getOnePost , getUserPost , updatePost };
