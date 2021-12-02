@@ -6,13 +6,15 @@ const authentication = require("./../midleware/Authentication");
 const authorization = require("./../midleware/Authorization")
 
 
-postRouter.post("/createPosts" , addPost);
-postRouter.get("/getAllPosts" , getAllPosts);
-postRouter.get("/getOnePost/:_id" , getOnePost);
-postRouter.get("/getUserPost/:users" , getUserPost);
-postRouter.put("/updatePost" , updatePost);
+postRouter.post("/createPosts", authentication , addPost);
+postRouter.get("/getAllPosts", authentication , getAllPosts);
+postRouter.get("/getOnePost/:_id" , authentication , getOnePost);
+postRouter.get("/getUserPost/:users", authentication , getUserPost);
+postRouter.put("/updatePost", authentication , updatePost);
 //
-postRouter.delete("/deletePost/:_id" , authentication , authorization , deletePost);
+postRouter.delete("/deletePost/:_id" , authentication , deletePost);
+
+
 
 
 module.exports = postRouter;

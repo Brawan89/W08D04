@@ -1,4 +1,5 @@
 const postModel = require("./../../db/models/post");
+// const roleModel = require("./../../db/models/role")
 
 //create post
 const addPost = (req, res) => {
@@ -24,6 +25,7 @@ const addPost = (req, res) => {
 const getAllPosts = (req, res) => {
   postModel
     .find({ isDel: false })
+    .populate("users")
     .then((result) => {
       if (result) {
         res.status(200).json(result);
@@ -42,6 +44,7 @@ const getOnePost = (req, res) => {
   const { _id } = req.params;
   postModel
     .find({ _id, isDel: false })
+    .populate("users")
     .then((result) => {
       if (result) {
         res.status(200).json(result);
@@ -56,60 +59,74 @@ const getOnePost = (req, res) => {
 
 // get post  by userId
 const getUserPost = (req, res) => {
-    const { users } = req.params;
-    postModel
-      .find({ users , isDel: false })
-      .then((result) => {
-        if (result) {
-          res.status(200).json(result);
-        } else {
-          res.status(400).json("This post not found");
-        }
-      })
-      .catch((err) => {
-        res.status(400).json(err);
-      });
-  };
-
-  //update post
-const updatePost = (req , res) => {
-    const { _id , img , dec , users } = req.body;
-    postModel
-    .findByIdAndUpdate({ _id , users , isDel: false },{
-        img,
-        dec,
-    })
-    .then((result) => {
-        if (result) {
-            res.status(200).json(" update post");
-          } else {
-            res.status(400).json("This post not found");
-          }
-    })
-    .catch((error) => {
-        res.status(400).json(error)
-    })
-}
-
-// delete post
-const deletePost = (req, res) => {
-  const { _id } = req.params;
+  const { users } = req.params;
   postModel
-    .findByIdAndDelete(_id,{ isDel: true })
+    .find({ users, isDel: false })
+    .populate("users")
     .then((result) => {
       if (result) {
-        res.status(200).json("deleted");
+        res.status(200).json(result);
       } else {
-        res.status(404).json("user not found");
+        res.status(400).json("This post not found");
       }
     })
     .catch((err) => {
       res.status(400).json(err);
     });
-        
-         
-}; 
+};
 
-        
+//update post
+const updatePost = (req, res) => {
+  const { _id, img, dec } = req.body;
+  postModel
+    .findByIdAndUpdate(
+      { _id, isDel: false },
+      {
+        img,
+        dec,
+      }
+    )
+    .populate("users")
+    .then((result) => {
+      if (!result) {
+        res.status(400).json(" This post not found");
+      } else {
+        res.status(200).json("update post");
+      }
+    })
+    .catch((error) => {
+      res.status(400).json(error);
+    });
+};
 
-module.exports = { addPost, getAllPosts, getOnePost , getUserPost , updatePost , deletePost };
+// delete post
+const deletePost = (req, res) => {
+  const { _id } = req.params;
+  postModel
+    .findByIdAndUpdate({_id,  users: req.token.id  , isDel: false },
+      {isDel: true},
+      {new: true})
+    .populate("users")
+    .then((result) => {
+      if (result) {
+        res.status(200).json("deleted");
+      } else {
+        res.status(403).json("post not found");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+};
+
+
+
+module.exports = {
+  addPost,
+  getAllPosts,
+  getOnePost,
+  getUserPost,
+  updatePost,
+  deletePost,
+  
+};

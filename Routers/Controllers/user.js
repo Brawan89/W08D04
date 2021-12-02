@@ -55,6 +55,7 @@ const login = (req, res) => {
 
           if (hashedPass) {
             const payload = {
+              id: result.id,
               userName: result.userName,
               email: result.email,
               isDel: result.isDel,
