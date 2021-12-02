@@ -93,10 +93,23 @@ const updatePost = (req , res) => {
 
 // delete post
 const deletePost = (req, res) => {
-   
-  }
-    
+  const { _id } = req.params;
+  postModel
+    .findByIdAndDelete(_id,{ isDel: true })
+    .then((result) => {
+      if (result) {
+        res.status(200).json("deleted");
+      } else {
+        res.status(404).json("user not found");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+        
+         
+}; 
 
-
+        
 
 module.exports = { addPost, getAllPosts, getOnePost , getUserPost , updatePost , deletePost };

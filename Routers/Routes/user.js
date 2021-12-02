@@ -10,7 +10,7 @@ userRouter.get("/allusers", authentication, authorization ,getAllUsers);
 //
 userRouter.post("/register" , register);
 userRouter.post("/login" , login);
-userRouter.delete("/deleteUser/:id" , deleteUser)
+userRouter.delete("/deleteUser/:id" , authentication, authorization ,  deleteUser)
 
 
 module.exports = userRouter;
