@@ -91,7 +91,12 @@ const updatePost = (req , res) => {
     })
 }
 
+// delete post
+const deletePost = (req, res) => {
+   
+  }
+    
 
 
 
-module.exports = { addPost, getAllPosts, getOnePost , getUserPost , updatePost };
+module.exports = { addPost, getAllPosts, getOnePost , getUserPost , updatePost , deletePost };
