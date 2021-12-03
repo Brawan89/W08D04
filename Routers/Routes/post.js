@@ -1,25 +1,35 @@
 const express = require("express");
 const postRouter = express.Router();
-const { addPost , getAllPosts , getOnePost , getUserPost , updatePost , deletePost, adminDeletePost , addLikes } = require("./../Controllers/post");
+const {
+  addPost,
+  getAllPosts,
+  getOnePost,
+  getUserPost,
+  updatePost,
+  deletePost,
+  adminDeletePost,
+  addLikes,
+} = require("./../Controllers/post");
 
 const authentication = require("./../midleware/Authentication");
-const authorization = require("./../midleware/Authorization")
+const authorization = require("./../midleware/Authorization");
 
-
-postRouter.post("/createPosts", authentication , addPost);
-postRouter.get("/getAllPosts", authentication , getAllPosts);
-postRouter.get("/getOnePost/:_id" , authentication , getOnePost);
-postRouter.get("/getUserPost/:users", authentication , getUserPost);
-postRouter.put("/updatePost", authentication , updatePost);
+postRouter.post("/createPosts", authentication, addPost);
+postRouter.get("/getAllPosts", authentication, getAllPosts);
+postRouter.get("/getOnePost/:_id", authentication, getOnePost);
+postRouter.get("/getUserPost/:users", authentication, getUserPost);
+postRouter.put("/updatePost", authentication, updatePost);
 //
-postRouter.delete("/deletePost/:_id" , authentication , deletePost);
+postRouter.delete("/deletePost/:_id", authentication, deletePost);
 // just admin delete post
-postRouter.delete("/adminDeletePost/:_id" , authentication , authorization , adminDeletePost);
+postRouter.delete(
+  "/adminDeletePost/:_id",
+  authentication,
+  authorization,
+  adminDeletePost
+);
 
 //like post
-postRouter.post("/addLikes/:posts", authentication , addLikes);
-
-
-
+postRouter.post("/addLikes/:posts", authentication, addLikes);
 
 module.exports = postRouter;

@@ -95,3 +95,11 @@ npm start
 - update Post
 - update Comment
 ```
+- Delete
+```
+- delete User by id
+- delete post by id
+- admin Delete Post by id
+- delet Comment by id
+- admin delete comment by id
+```
