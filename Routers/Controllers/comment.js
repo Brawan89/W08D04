@@ -35,6 +35,26 @@ const getAllComments = (req, res) => {
     });
 };
 
+//update Comment
+const updateComment = (req, res) => {
+  const { _id, comment , posts } = req.body;
+  commentModel
+    .findByIdAndUpdate(
+      { _id, posts, users: req.token.id ,isDel: false },
+      {
+        comment,
+      }
+    )
+    .then((result) => {
+      if (result) {
+        res.status(400).json("yes updated");
+      } else {
+        res.status(200).json("not found any Comment");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+};
 
-
-module.exports = { addComment  , getAllComments };
+module.exports = { addComment , updateComment , getAllComments };
