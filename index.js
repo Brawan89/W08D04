@@ -18,6 +18,10 @@ app.use(userRouter);
 const postRouter = require("./Routers/Routes/post");
 app.use(postRouter);
 
+//comment
+const commentRouter = require("./Routers/Routes/comment");
+app.use(commentRouter);
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT , () => {
     console.log(`Server run on ${PORT}`);
