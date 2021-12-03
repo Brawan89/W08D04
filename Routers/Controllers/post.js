@@ -1,6 +1,7 @@
 const postModel = require("./../../db/models/post");
 // const roleModel = require("./../../db/models/role")
 const likeModel = require("./../../db/models/like");
+const commentModel = require("./../../db/models/comment");
 
 //create post
 const addPost = (req, res) => {
@@ -44,7 +45,7 @@ const getAllPosts = (req, res) => {
 const getOnePost = (req, res) => {
   const { _id } = req.params;
   postModel
-    .find({ _id, isDel: false })
+    .find({ _id, users: req.token.id, isDel: false })
     .populate("users")
     .then((result) => {
       if (result) {
@@ -112,9 +113,47 @@ const deletePost = (req, res) => {
     .populate("users")
     .then((result) => {
       if (result) {
-        res.status(200).json("deleted");
+        commentModel.find({ isDel: true }).catch((err) => {
+          res.status(400).json(err);
+        });
+        likeModel.find({ like: false }).catch((err) => {
+          res.status(400).json(err);
+        })
+          res.status(201).json("deleted");
       } else {
-        res.status(403).json("post not found");
+        res.status(404).json("already deleted");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+};
+
+// admin just delete post
+const adminDeletePost = (req, res) => {
+  const { _id } = req.params;
+  postModel
+    .findByIdAndUpdate(
+      { _id, users: req.token.id, isDel: false },
+      { isDel: true },
+      { new: true }
+    )
+    .populate("users")
+    .then((result) => {
+      if (result) {
+        commentModel.updateMany({ isDel: true }).catch((err) => {
+          res.status(400).json(err);
+        });
+        likeModel
+          .updateMany({ like: false })
+          .then(() => {
+            res.status(201).json("deleted");
+          })
+          .catch((err) => {
+            res.status(400).json(err);
+          });
+      } else {
+        res.status(404).json("already deleted");
       }
     })
     .catch((err) => {
@@ -129,8 +168,7 @@ const addLikes = (req, res) => {
 
   if (like) {
     likeModel
-      .findOne(
-        { posts, users: req.token.id })
+      .findOne({ posts, users: req.token.id })
       .then((result) => {
         if (result) {
           likeModel
@@ -194,5 +232,6 @@ module.exports = {
   getUserPost,
   updatePost,
   deletePost,
+  adminDeletePost,
   addLikes,
 };
