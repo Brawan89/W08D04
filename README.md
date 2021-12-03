@@ -81,4 +81,12 @@ npm start
 - get post by id
 - get posts in one user
 ```
-
+- POST
+```
+- create Role
+- Register
+- login
+- create Posts
+- add Comment
+- add like
+```
