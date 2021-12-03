@@ -37,10 +37,10 @@ const getAllComments = (req, res) => {
 
 //update Comment
 const updateComment = (req, res) => {
-  const { _id, comment , posts } = req.body;
+  const { _id, comment, posts } = req.body;
   commentModel
     .findByIdAndUpdate(
-      { _id, posts, users: req.token.id ,isDel: false },
+      { _id, posts, users: req.token.id, isDel: false },
       {
         comment,
       }
@@ -57,4 +57,28 @@ const updateComment = (req, res) => {
     });
 };
 
-module.exports = { addComment , updateComment , getAllComments };
+//delete comment
+const deletComment = (req, res) => {
+  const { id } = req.params;
+  const { posts } = req.body;
+  commentModel
+    .findOneAndUpdate(
+      { id , posts, users: req.token.id , isDel: false },
+      { isDel: true },
+      { new: true }
+    )
+    .exec()
+    .then((result) => {
+      console.log(result);
+      if (result) {
+        res.status(201).send("Deleted");
+      } else {
+        res.status(404).json("Comment Already Deleted");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+};
+
+module.exports = { addComment, updateComment, getAllComments, deletComment };
