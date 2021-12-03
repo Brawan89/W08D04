@@ -63,15 +63,14 @@ const deletComment = (req, res) => {
   const { posts } = req.body;
   commentModel
     .findOneAndUpdate(
-      { id , posts, users: req.token.id , isDel: false },
+      { id, posts, users: req.token.id, isDel: false },
       { isDel: true },
       { new: true }
     )
-    .exec()
     .then((result) => {
       console.log(result);
       if (result) {
-        res.status(201).send("Deleted");
+        res.status(201).json("Deleted");
       } else {
         res.status(404).json("Comment Already Deleted");
       }
@@ -81,4 +80,32 @@ const deletComment = (req, res) => {
     });
 };
 
-module.exports = { addComment, updateComment, getAllComments, deletComment };
+//delet oment by just admin
+const adminDeleteComment = (req, res) => {
+  // const { id } = req.params;
+  const { id , posts , users } = req.body;
+  commentModel
+    .findOneAndUpdate(
+      { id, posts, users , isDel: false },
+      { isDel: true },
+      { new: true }
+    )
+    .then((result) => {
+      if (result) {
+        res.status(201).json("deleted");
+      } else {
+        res.status(404).json("Comment Already Deleted");
+      }
+    })
+    .catch((err) => {
+      res.status(400).json(err);
+    });
+};
+
+module.exports = {
+  addComment,
+  updateComment,
+  getAllComments,
+  deletComment,
+  adminDeleteComment,
+};
