@@ -69,3 +69,16 @@ npm start
     - userID
     - postID
     - timeComment
+
+> Routes:
+
+- GET
+```
+- get all rols 
+- get all users
+- get user by id
+- get all post
+- get post by id
+- get posts in one user
+```
+
