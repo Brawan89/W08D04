@@ -90,3 +90,8 @@ npm start
 - add Comment
 - add like
 ```
+- PUT
+```
+- update Post
+- update Comment
+```
