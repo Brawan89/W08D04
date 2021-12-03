@@ -5,6 +5,7 @@ const post = new mongoose.Schema({
   dec: { type: String, required: true },
   users: { type: mongoose.Schema.Types.ObjectId, required: true, ref: "User" },
   isDel: { type: Boolean, default: false },
+  // likes: { type: mongoose.Schema.Types.ObjectId ,vref: "Like"},
   timePost: { type: Date, default: Date.now },
 });
 

@@ -1,5 +1,4 @@
 const commentModel = require("./../../db/models/comment");
-const postModel = require("./../../db/models/post");
 
 //create comment
 const addComment = (req, res) => {

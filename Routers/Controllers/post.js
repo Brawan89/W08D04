@@ -1,5 +1,6 @@
 const postModel = require("./../../db/models/post");
 // const roleModel = require("./../../db/models/role")
+const likeModel = require("./../../db/models/like");
 
 //create post
 const addPost = (req, res) => {
@@ -103,9 +104,11 @@ const updatePost = (req, res) => {
 const deletePost = (req, res) => {
   const { _id } = req.params;
   postModel
-    .findByIdAndUpdate({_id,  users: req.token.id  , isDel: false },
-      {isDel: true},
-      {new: true})
+    .findByIdAndUpdate(
+      { _id, users: req.token.id, isDel: false },
+      { isDel: true },
+      { new: true }
+    )
     .populate("users")
     .then((result) => {
       if (result) {
@@ -119,7 +122,70 @@ const deletePost = (req, res) => {
     });
 };
 
+//like
+const addLikes = (req, res) => {
+  const { posts } = req.params;
+  const { like } = req.body;
 
+  if (like) {
+    likeModel
+      .findOne(
+        { posts, users: req.token.id })
+      .then((result) => {
+        if (result) {
+          likeModel
+            .findOneAndUpdate(
+              { posts, users: req.token.id, like: false },
+              { like: true },
+              { new: true }
+            )
+            .then((result) => {
+              if (result) {
+                res.status(200).json(result);
+              } else {
+                res.status(404).json("post not found");
+              }
+            })
+            .catch((err) => {
+              res.status(400).json(err);
+            });
+        } else {
+          const like = new likeModel({
+            posts,
+            users: req.token.id,
+          });
+          like
+            .save()
+            .then((result) => {
+              res.status(201).json(result);
+            })
+            .catch((err) => {
+              res.status(400).json(err);
+            });
+        }
+      })
+      .catch((err) => {
+        res.status(400).json(err);
+      });
+  } else {
+    likeModel
+      .findOneAndUpdate(
+        { posts, users: req.token.id, like: true },
+        { like: false },
+        { new: true }
+      )
+      .then((result) => {
+        if (result) {
+          res.status(200).json(result);
+        } else {
+          res.status(404).json("post not found");
+        }
+      })
+      .catch((err) => {
+        res.status(400).json(err);
+      });
+  }
+};
 
 module.exports = {
   addPost,
@@ -128,5 +194,5 @@ module.exports = {
   getUserPost,
   updatePost,
   deletePost,
-  
+  addLikes,
 };
