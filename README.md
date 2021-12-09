@@ -103,3 +103,12 @@ npm start
 - delet Comment by id
 - admin delete comment by id
 ```
+
+## ER Diagram 
+
+![Er2](https://user-images.githubusercontent.com/92247926/145340749-515cf3c1-9903-49f8-aa7d-824ba8948610.png)
+
+
+## UML Diagram
+
+![UMLD2](https://user-images.githubusercontent.com/92247926/145340775-6af418d4-086e-44f3-abee-586a57596939.png)
