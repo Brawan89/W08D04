@@ -111,4 +111,4 @@ npm start
 
 ## UML Diagram
 
-![UMLD2](https://user-images.githubusercontent.com/92247926/145340775-6af418d4-086e-44f3-abee-586a57596939.png)
+![UML Diagram2](https://user-images.githubusercontent.com/92247926/145341095-683031be-5ba5-4179-80b1-03857a61963a.png)
