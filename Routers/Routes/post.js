@@ -15,10 +15,10 @@ const authentication = require("./../midleware/Authentication");
 const authorization = require("./../midleware/Authorization");
 
 postRouter.post("/createPosts", authentication, addPost);
-postRouter.get("/getAllPosts", authentication, getAllPosts);
-postRouter.get("/getOnePost/:_id", authentication, getOnePost);
-postRouter.get("/getUserPost/:users", authentication, getUserPost);
-postRouter.put("/updatePost", authentication, updatePost);
+postRouter.get("/getAllPosts", authentication,  getAllPosts);
+postRouter.get("/getOnePost/:_id", getOnePost);
+postRouter.get("/getUserPost/:users", authentication ,getUserPost);
+postRouter.put("/updatePost/:id", authentication, updatePost);
 //
 postRouter.delete("/deletePost/:_id", authentication, deletePost);
 // just admin delete post
@@ -30,6 +30,6 @@ postRouter.delete(
 );
 
 //like post
-postRouter.post("/addLikes/:posts", authentication, addLikes);
+postRouter.put("/addLikes/:posts", authentication, addLikes);
 
 module.exports = postRouter;

@@ -1,16 +1,23 @@
 const commentModel = require("./../../db/models/comment");
+const postModel = require("./../../db/models/post")
 
 //create comment
 const addComment = (req, res) => {
-  const { comment, posts } = req.body;
+  const { comment  } = req.body;
+  // const { id } = req.params;
   const newComment = new commentModel({
     comment,
-    posts,
+    posts:req.token.id,
     users: req.token.id,
   });
   newComment
     .save()
     .then((result) => {
+      postModel
+        .findByIdAndUpdate({ $push: { comment: result._id } })
+        .then((result) => {
+          console.log(result);
+        });
       res.status(201).json(result);
     })
     .catch((err) => {

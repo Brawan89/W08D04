@@ -5,11 +5,11 @@ const commentModel = require("./../../db/models/comment");
 
 //create post
 const addPost = (req, res) => {
-  const { img, dec, users } = req.body;
+  const { img, dec } = req.body;
   const newPost = new postModel({
     img,
     dec,
-    users,
+    users: req.token.id ,
   });
   newPost
     .save()
@@ -26,7 +26,7 @@ const addPost = (req, res) => {
 //post not delete
 const getAllPosts = (req, res) => {
   postModel
-    .find({ isDel: false })
+.find({ isDel: false , users: req.token.id })
     .populate("users")
     .then((result) => {
       if (result) {
@@ -45,7 +45,7 @@ const getAllPosts = (req, res) => {
 const getOnePost = (req, res) => {
   const { _id } = req.params;
   postModel
-    .find({ _id, users: req.token.id, isDel: false })
+    .find({ _id, /*users: req.token.id, */ isDel: false })
     .populate("users")
     .then((result) => {
       if (result) {
@@ -79,13 +79,15 @@ const getUserPost = (req, res) => {
 
 //update post
 const updatePost = (req, res) => {
-  const { _id, img, dec } = req.body;
+  const {id} = req.params;
+  const {  dec } = req.body;
   postModel
     .findByIdAndUpdate(
-      { _id, isDel: false },
+      { _id: id, isDel: false },
       {
-        img,
+        // img,
         dec,
+        // users: req.token.id
       }
     )
     .populate("users")
@@ -119,7 +121,7 @@ const deletePost = (req, res) => {
         likeModel.find({ like: false }).catch((err) => {
           res.status(400).json(err);
         })
-          res.status(201).json("deleted");
+          res.status(200).json("deleted");
       } else {
         res.status(404).json("already deleted");
       }
@@ -147,7 +149,7 @@ const adminDeletePost = (req, res) => {
         likeModel
           .updateMany({ like: false })
           .then(() => {
-            res.status(201).json("deleted");
+            res.status(200).json("deleted");
           })
           .catch((err) => {
             res.status(400).json(err);

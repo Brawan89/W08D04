@@ -6,7 +6,7 @@ const { addComment , getAllComments , updateComment , deletComment , adminDelete
 const authentication = require("./../midleware/Authentication");
 const authorization = require("./../midleware/Authorization");
 
-commentRouter.post("/addComment", authentication , addComment);
+commentRouter.put("/addComment", authentication , addComment);
 commentRouter.get("/getAllComments" , getAllComments)
 commentRouter.put("/updateComment", authentication, updateComment);
 commentRouter.delete("/deletComment/:id", authentication, deletComment);

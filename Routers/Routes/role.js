@@ -7,6 +7,6 @@ const authorization = require("./../midleware/Authorization")
 
 
 roleRouter.post("/createRole", authentication, authorization ,creatRole);
-roleRouter.get("/roles", authentication, authorization ,getRoles);
+roleRouter.get("/roles", /*authentication, authorization ,*/getRoles);
 
 module.exports = roleRouter;

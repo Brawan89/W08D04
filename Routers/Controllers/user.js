@@ -2,40 +2,179 @@ const userModel = require("./../../db/models/user");
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const _ = require("lodash")
 
 require("dotenv").config();
+
+const mailgun = require("mailgun-js");
+const res = require("express/lib/response");
+const DOMAIN = "sandboxf7f6d9f615864af7ae695db33874f4a9.mailgun.org";
+const mg = mailgun({ apiKey: process.env.MAILGUN_APIKEY, domain: DOMAIN });
 
 const SALT = Number(process.env.SALT);
 const secret = process.env.SECRET_KEY;
 
 //create users
 const register = async (req, res) => {
-  const { userName, email, password, isDel, avatar, role } = req.body;
+const { userName, email, password /*, isDel, avatar, role*/ } = req.body;
 
   // email -> lowerCase
   const saveEmail = email.toLowerCase();
   //encryption password
   const savedPass = await bcrypt.hash(password, SALT);
-
-  const newUser = new userModel({
-    userName,
+  
+  userModel.findOne({ email:saveEmail }).exec((err, user) => {
+    if (user) {
+       res
+        .status(400)
+        .json({ error: "user with this email already exists." });
+    }
+  const payload= {
     email: saveEmail,
+    userName,
     password: savedPass,
-    isDel,
-    avatar,
-    role,
-  });
+  }
+  
+    const token = jwt.sign(
+      { userName, email, password },
+      payload,secret,
+      { expiresIn: "1h" }
+    );
 
-  newUser
-    .save()
-    .then((result) => {
-      res.status(201).json(result);
-    })
-    .catch((err) => {
-      console.log(err);
-      res.status(400).json(err);
+    const data = {
+      from: "noreply@hello.com",
+      to: saveEmail,
+      subject: "Account Activation Link",
+      html: `
+      <h2>Please click on given link to activate your account</h2>
+      <a href = "${process.env.CLIENT_URL}/authentication/activate/${token}"></a>
+      `,
+    };
+    mg.messages().send(data, function (error) {
+      if (error) {
+        return res.json("1",{ 
+          error: err.message,
+        });
+      }else {
+       res.json({message: "Email has been sent, kindly activate your account"});
+      }
     });
-};
+  })
+}
+// active account
+const activeAccount =  (res, req) => {
+  const { token } = req.body;
+  if (token) { 
+    jwt.verify(token, secret, (err, decodeToken) => {
+      if (err) {
+        res.status(400).json({error: "Incorrect or Expired link" });
+      } else{ 
+        const {email, userName,password} = decodeToken;
+        userModel
+        .findOne({ email })
+        .then((result) => {
+          if (result) {
+            res.status(400).send("Email is already in use!");
+          } else {
+            const newUser = new userModel({
+              email,
+              userName,
+              password,
+            });
+            newUser
+              .save()
+              .then((result) => {
+                res.status(200).send("Signup successfully");
+              })
+              .catch((err) => {
+                res.status(400).send("2",err);
+              });
+            }
+            })
+            .catch((err) => {
+              res.status(400).send("3",err);
+          })
+        }
+      });
+     } else {
+        res.status(400).send("Somthing went wrong!");
+      
+    }
+  }
+
+  //forgot password
+  const forgotPassword = (req,res)=>{
+const {email} = req.body;
+userModel.findOne({email} , (err,user) => {
+  if(err || !user){
+    res
+        .status(400)
+        .json({ error: "user with this email already exists." });
+  }
+  const token = jwt.sign(
+    { _id: user._id  },
+    process.env.RESET_PASSWORD_KEY,
+    { expiresIn: "1h" }
+  );
+
+  const data = {
+    from: "noreply@hello.com",
+    to: email,
+    subject: "Account Activation Link",
+    html: `
+    <h2>Please click on given link to reset your password</h2>
+    <p> ${process.env.CLIENT_URL}/resetpassword/${token}</p>
+    `,
+  };
+  return userModel.updateOne({resetLink: token} , function (err , success){
+    if(err){
+      return res.status(400).json({error: "reset password link error"});
+    }else{
+      mg.messages().send(data, function(error , body){
+        if(error){
+          return res.json({
+            error: err.message
+          })
+        }
+        return res.json({message: "Email has been sent, kindly follow the instructions"});
+      })
+    }
+  })
+})
+  }
+
+  //reset Password
+  const resetPassword = (req , res)=> {
+    const {resetLink , newPass} = req.body;
+    if(resetLink){
+      jwt.verify(resetLink, process.env.RESET_PASSWORD_KEY, function(error, decodedData){
+        if(error){
+          return res.status(401).json({error: "Incorrect token or it is expirod."})
+        }
+        userModel.findOne({resetLink}, (err , user)=>{
+          if(err || !user){
+            return res.status(400).json({error: "user with this token does not exist."})
+          }
+          const obj = {
+            password: newPass,
+            resetLink: ''
+          }
+          user= _.extend(user,obj);
+          user.save((err, result)=>{
+            if(err){
+              return res.status(400).json({error: "reset password error"});
+            }else{
+                return res.status(200).json({message: "Your password has been changed,"});
+            }
+          })
+        })
+      })
+
+    }else{
+      return res.status(401).json({erroe: "Authentication error!!"});
+
+    }
+  }
 
 //login
 const login = (req, res) => {
@@ -81,7 +220,7 @@ const login = (req, res) => {
 //get all users
 const getAllUsers = (req, res) => {
   userModel
-    .find({})
+    .find({ isDel: false })
     .then((result) => {
       res.status(200).json(result);
     })
@@ -107,4 +246,4 @@ const deleteUser = (req, res) => {
     });
 };
 
-module.exports = { register, login, getAllUsers, deleteUser };
+module.exports = { register, activeAccount, forgotPassword, resetPassword , login, getAllUsers, deleteUser };
