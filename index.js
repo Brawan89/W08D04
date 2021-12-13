@@ -6,9 +6,9 @@ require("dotenv").config();
 const cors = require("cors");
 app.use(morgan("dev"));
 app.use(cors());
-// const passportSetup = require("./passport")
 
 require("./db");
+
 
 
 //role
