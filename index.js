@@ -1,14 +1,12 @@
 const express = require("express");
-const morgan = require("morgan");
 const app = express();
 app.use(express.json());
 require("dotenv").config();
 const cors = require("cors");
-app.use(morgan("dev"));
 app.use(cors());
 
-require("./db");
 
+require("./db");
 
 
 //role

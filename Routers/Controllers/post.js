@@ -3,7 +3,6 @@ const postModel = require("./../../db/models/post");
 const likeModel = require("./../../db/models/like");
 const commentModel = require("./../../db/models/comment");
 
-//create post
 const addPost = (req, res) => {
   const { img, dec } = req.body;
   const newPost = new postModel({
@@ -26,7 +25,7 @@ const addPost = (req, res) => {
 //post not delete
 const getAllPosts = (req, res) => {
   postModel
-.find({ isDel: false , users: req.token.id })
+.find({ /*isDel: false ,*/ users: req.token.id })
     .populate("users")
     .then((result) => {
       if (result) {
@@ -43,10 +42,10 @@ const getAllPosts = (req, res) => {
 // get one post -> id
 //post not delete
 const getOnePost = (req, res) => {
-  const { _id } = req.params;
+  // const { _id } = req.params;
   postModel
-    .find({ _id, /*users: req.token.id, */ isDel: false })
-    .populate("users")
+    .find({ /*_id,*/ /*users: req.token.id, */ isDel: false })
+    // .populate("users")
     .then((result) => {
       if (result) {
         res.status(200).json(result);
@@ -165,66 +164,45 @@ const adminDeletePost = (req, res) => {
 
 //like
 const addLikes = (req, res) => {
-  const { posts } = req.params;
-  const { like } = req.body;
+  const { _id } = req.params;
+  // const { userId } = req.body
+  console.log("hello");
 
-  if (like) {
-    likeModel
-      .findOne({ posts, users: req.token.id })
-      .then((result) => {
-        if (result) {
-          likeModel
-            .findOneAndUpdate(
-              { posts, users: req.token.id, like: false },
-              { like: true },
-              { new: true }
-            )
-            .then((result) => {
-              if (result) {
-                res.status(200).json(result);
-              } else {
-                res.status(404).json("post not found");
-              }
-            })
-            .catch((err) => {
-              res.status(400).json(err);
-            });
-        } else {
-          const like = new likeModel({
-            posts,
-            users: req.token.id,
+  likeModel
+    .findOne({ posts: _id, users: req.token.id })
+    .then((ruselt) => {
+      if (ruselt) {
+        likeModel
+          .findOneAndUpdate(
+            { posts: _id, users: req.token.id },
+            { like: !ruselt.like }
+          )
+          .then((updateResult) => {
+            res.status(200).send(updateResult);
+          })
+          .catch((err) => {
+            res.status(400).send(err);
+            
           });
-          like
-            .save()
-            .then((result) => {
-              res.status(201).json(result);
-            })
-            .catch((err) => {
-              res.status(400).json(err);
-            });
-        }
-      })
-      .catch((err) => {
-        res.status(400).json(err);
-      });
-  } else {
-    likeModel
-      .findOneAndUpdate(
-        { posts, users: req.token.id, like: true },
-        { like: false },
-        { new: true }
-      )
-      .then((result) => {
-        if (result) {
-          res.status(200).json(result);
-        } else {
-          res.status(404).json("post not found");
-        }
-      })
-      .catch((err) => {
-        res.status(400).json(err);
-      });
-  }
+      } else {
+        const likePost = new likeModel({
+          posts: _id,
+          users: req.token.id,
+        });
+
+        likePost
+          .save()
+          .then((newResult) => {
+            res.status(200).send(newResult);
+          })
+          .catch((err) => {
+            res.status(400).send(err);
+          });
+      }
+    })
+    .catch((err) => {
+      res.status(400).send(err);
+    });
 };
 
 module.exports = {

@@ -3,42 +3,55 @@ const postModel = require("./../../db/models/post")
 
 //create comment
 const addComment = (req, res) => {
-  const { comment  } = req.body;
-  // const { id } = req.params;
-  const newComment = new commentModel({
-    comment,
-    posts:req.token.id,
-    users: req.token.id,
-  });
-  newComment
-    .save()
-    .then((result) => {
-      postModel
-        .findByIdAndUpdate({ $push: { comment: result._id } })
-        .then((result) => {
-          console.log(result);
-        });
-      res.status(201).json(result);
-    })
-    .catch((err) => {
-      res.status(400).json(err);
-    });
+    const userId=req.token.id;
+  const { comment, posts } = req.body;
+        try{postModel
+          .findOne({ $and: [{ _id: posts }, { isDel: false }] })
+          .then((result) => {
+            if (result) {
+              const newComment = new commentModel({
+                comment,
+                users:userId,
+                posts,
+              });
+              newComment
+                .save()
+                .then((result) => {
+                  res.status(200).json(result);
+                })
+                .catch((err) => {
+                  res.status(400).json(err);
+                });
+            } else {
+              res.status(400).json("Post not found");
+            }
+          })
+          .catch((err) => {
+            res.status(400).json("Post not found");
+          });
+        }catch(err){
+            res.status(400).send(err);
+        }
+      
 };
+
+
 
 // get al comments
 const getAllComments = (req, res) => {
   commentModel
-    .find({ isDel: false })
-    .then((result) => {
-      if (result) {
-        res.status(200).json(result);
-      } else {
-        res.status(400).json("comment not found");
-      }
-    })
-    .catch((err) => {
-      res.status(400).json(err);
-    });
+  .find({ isDel: false })
+  .populate("user")
+  .then((result) => {
+    if (result.length > 0) {
+      res.status(200).send(result);
+    } else {
+      res.status(404).send("No comments");
+    }
+  })
+  .catch((err) => {
+    res.status(400).send(err);
+  });
 };
 
 //update Comment
@@ -65,24 +78,24 @@ const updateComment = (req, res) => {
 
 //delete comment
 const deletComment = (req, res) => {
-  const { id } = req.params;
-  const { posts } = req.body;
-  commentModel
+  const { postId, comId } = req.params;
+
+  comModel
     .findOneAndUpdate(
-      { id, posts, users: req.token.id, isDel: false },
+      { _id: comId, users: req.token.id, posts: postId, isDel: false },
       { isDel: true },
       { new: true }
     )
+    .exec()
     .then((result) => {
-      console.log(result);
       if (result) {
-        res.status(201).json("Deleted");
+        res.status(200).send("Deleted successfully");
       } else {
-        res.status(404).json("Comment Already Deleted");
+        res.status(404).send("Failed deleted");
       }
     })
     .catch((err) => {
-      res.status(400).json(err);
+      res.status(400).send(err);
     });
 };
 

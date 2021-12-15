@@ -1,5 +1,9 @@
 const userModel = require("./../../db/models/user");
-const passport = require("passport");
+const postModel = require("./../../db/models/post");
+const comModel = require("./../../db/models/comment");
+const likeModel = require("./../../db/models/like");
+// const passport = require("passport");
+//
 
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -39,17 +43,17 @@ const register = async (req, res) => {
       userName,
       password: savedPass,
     };
-    const options = { expiresIn: "20m" };
+    const options = { expiresIn: "60m" };
 
     const token = jwt.sign(payload, secret, options);
 
     const data = {
       from: "noreply@hello.com",
-      to: email,
+      to: saveEmail,
       subject: "Account Activation Link",
       html: `
-      <h2>Please click on given link to activate your account</h2>
-      <a href = "${process.env.CLIENT_URL}/authentication/activate/${token}"></a>
+      <h2> Please click on given link to activate your account </h2>
+      <p> ${process.env.CLIENT_URL}/authentication/activate${token} </p>
       `,
     };
     mg.messages().send(data, function (error) {
@@ -114,80 +118,82 @@ const activeAccount = (req, res) => {
 //forgot password
 const forgotPassword = (req, res) => {
   const { email } = req.body;
-  userModel.findOne({ email }, (err, user) => {
-    if (err || !user) {
-      res.status(400).json({ error: "user with this email already exists." });
-    }
-    const token = jwt.sign({ _id: user._id }, process.env.RESET_PASSWORD_KEY, {
-      expiresIn: "7d",
-    });
 
-    const data = {
-      from: "noreply@hello.com",
-      to: email,
-      subject: "Account Activation Link",
-      html: `
-    <h2>Please click on given link to reset your password</h2>
-    <p> ${process.env.CLIENT_URL}/resetpassword/${token}</p>
-    `,
-    };
-    return userModel.updateOne({ resetLink: token }, function (err, success) {
-      if (err) {
-        return res.status(400).json({ error: "reset password link error" });
-      } else {
-        mg.messages().send(data, function (error, body) {
-          if (error) {
-            return res.json({
-              error: err.message,
-            });
-          }
-          return res.json({
-            message: "Email has been sent, kindly follow the instructions",
+  const savedEmail = email.toLowerCase();
+
+  userModel
+    .findOne({ email: savedEmail })
+    .then(async (result) => {
+      const payload = {
+        _id: result._id,
+        email: savedEmail,
+      };
+      const options = { expiresIn: "1h" };
+      const token = await jwt.sign(payload, secret, options);
+
+      const data = {
+        from: "norelay@myFirstEmail.com",
+        to: savedEmail,
+        subject: "Reset Passwoed",
+        html: `<h2>Reset Password</h2>
+        <a href="${process.env.CLIENT_URL}/resetPassword">Reset password</a>
+        `,
+      };
+      userModel
+        .findOneAndUpdate({ email: savedEmail }, { resetLink: token })
+        .then(() => {
+          mg.messages().send(data, (error) => {
+            if (error) {
+              res.status(400).send(error);
+            } else {
+              res.status(200).send({ token });
+            }
           });
+        })
+        .catch((err) => {
+          res.status(400).send(err);
         });
-      }
+    })
+    .catch((err) => {
+      res.status(400).send(err);
     });
-  });
 };
 
 //reset Password
-const resetPassword = (req, res) => {
+const resetPassword = async (req, res) => {
   const { resetLink, newPass } = req.body;
+
+  const hashedPassword = await bcrypt.hash(newPass, Number(process.env.SALT));
+
   if (resetLink) {
-    jwt.verify(
-      resetLink,
-      process.env.RESET_PASSWORD_KEY,
-      function (error, decodedData) {
-        if (error) {
-          return res
-            .status(401)
-            .json({ error: "Incorrect token or it is expirod." });
-        }
-        userModel.findOne({ resetLink }, (err, user) => {
-          if (err || !user) {
-            return res
-              .status(400)
-              .json({ error: "user with this token does not exist." });
-          }
-          const obj = {
-            password: newPass,
-            resetLink: "",
-          };
-          user = _.extend(user, obj);
-          user.save((err, result) => {
-            if (err) {
-              return res.status(400).json({ error: "reset password error" });
-            } else {
-              return res
-                .status(200)
-                .json({ message: "Your password has been changed," });
+    jwt.verify(resetLink, secret, (err) => {
+      if (err) {
+        res.status(401).send("Incorrect or expired link");
+      } else {
+        userModel
+          .findOne({ resetLink })
+          .then((result) => {
+            if (result) {
+              userModel
+                .findOneAndUpdate(
+                  { resetLink },
+                  { password: hashedPassword, resetLink: "" }
+                )
+                .then(() => {
+                  res.status(200).send("Reset successfully");
+                })
+                .catch((err) => {
+                  res.status(400).send(err);
+                });
             }
+          })
+          .catch((err) => {
+            res.status(400).send(err);
           });
-        });
       }
-    );
+    });
   } else {
-    return res.status(401).json({ erroe: "Authentication error!!" });
+    res.status(401).send("Authentication error");
   }
 };
 
@@ -232,51 +238,51 @@ const login = (req, res) => {
     .catch((err) => res.status(400).json(err));
 };
 // login with google
-const googlelogin = (req, res) => {
-  const { tokenId } = req.body;
+// const googlelogin = (req, res) => {
+//   const { tokenId } = req.body;
 
-  clientAuth
-    .verifyIdToken({
-      idToken: tokenId,
-      audience:
-        "370506827743-5hqo8bs3mk6shn6hmof7be045p8sjkl7.apps.googleusercontent.com",
-    })
-    .then((response) => {
-      const { email_verfied, userName, email } = response.payload;
-      if (email_verfied) {
-        userModel.findOne({ email }).exec((err, user) => {
-          if (err) {
-            return res.status(400).json({ error: "something went wrong..." });
-          } else {
-            if (user) {
-              const token = jwt.sign(
-                { _id: user._id },
-                process.env.JWT_SIGNIN_KEY,
-                { expiresIn: "7d" }
-              );
-              const { _id, userName, email } = user;
-              res.json({ token, user: { _id, userName, email } });
-            } else {
-              let password = email + process.env.JWT_SIGNIN_KEY;
-              let newUser = new userModel({ userName, email, password });
-              newUser.save((err, data) => {
-                if (err) {
-                  return res.status(400).json({ error: "somthing wrong..." });
-                }
-                const token = jwt.sign(
-                  { _id: data._id },
-                  process.env.JWT_SIGNIN_KEY,
-                  { expiresIn: "7d" }
-                );
-                const { _id, userName, email } = newUser;
-                res.json({ token, user: { _id, userName, email } });
-              });
-            }
-          }
-        });
-      }
-    });
-};
+//   clientAuth
+//     .verifyIdToken({
+//       idToken: tokenId,
+//       audience:
+//         "370506827743-5hqo8bs3mk6shn6hmof7be045p8sjkl7.apps.googleusercontent.com",
+//     })
+//     .then((response) => {
+//       const { email_verfied, userName, email } = response.payload;
+//       if (email_verfied) {
+//         userModel.findOne({ email }).exec((err, user) => {
+//           if (err) {
+//             return res.status(400).json({ error: "something went wrong..." });
+//           } else {
+//             if (user) {
+//               const token = jwt.sign(
+//                 { _id: user._id },
+//                 process.env.JWT_SIGNIN_KEY,
+//                 { expiresIn: "7d" }
+//               );
+//               const { _id, userName, email } = user;
+//               res.json({ token, user: { _id, userName, email } });
+//             } else {
+//               let password = email + process.env.JWT_SIGNIN_KEY;
+//               let newUser = new userModel({ userName, email, password });
+//               newUser.save((err, data) => {
+//                 if (err) {
+//                   return res.status(400).json({ error: "somthing wrong..." });
+//                 }
+//                 const token = jwt.sign(
+//                   { _id: data._id },
+//                   process.env.JWT_SIGNIN_KEY,
+//                   { expiresIn: "7d" }
+//                 );
+//                 const { _id, userName, email } = newUser;
+//                 res.json({ token, user: { _id, userName, email } });
+//               });
+//             }
+//           }
+//         });
+//       }
+//     });
+// };
 
 //get all users
 const getAllUsers = (req, res) => {
@@ -313,7 +319,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   login,
-  googlelogin,
+  // googlelogin,
   getAllUsers,
   deleteUser,
 };

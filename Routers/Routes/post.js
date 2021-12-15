@@ -15,8 +15,8 @@ const authentication = require("./../midleware/Authentication");
 const authorization = require("./../midleware/Authorization");
 
 postRouter.post("/createPosts", authentication, addPost);
-postRouter.get("/getAllPosts", authentication,  getAllPosts);
-postRouter.get("/getOnePost/:_id", getOnePost);
+postRouter.get("/getAllPosts",authentication,  getAllPosts);
+postRouter.get("/getPost", getOnePost);
 postRouter.get("/getUserPost/:users", authentication ,getUserPost);
 postRouter.put("/updatePost/:id", authentication, updatePost);
 //
@@ -30,6 +30,6 @@ postRouter.delete(
 );
 
 //like post
-postRouter.put("/addLikes/:posts", authentication, addLikes);
+postRouter.put("/addLikes/:_id", authentication, addLikes);
 
 module.exports = postRouter;

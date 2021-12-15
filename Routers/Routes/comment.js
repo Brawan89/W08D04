@@ -6,11 +6,11 @@ const { addComment , getAllComments , updateComment , deletComment , adminDelete
 const authentication = require("./../midleware/Authentication");
 const authorization = require("./../midleware/Authorization");
 
-commentRouter.put("/addComment", authentication , addComment);
+commentRouter.post("/addComment", authentication  ,addComment);
 commentRouter.get("/getAllComments" , getAllComments)
 commentRouter.put("/updateComment", authentication, updateComment);
-commentRouter.delete("/deletComment/:id", authentication, deletComment);
-commentRouter.delete("/adminDeleteComment", authentication, authorization , adminDeleteComment);
+commentRouter.delete("/deletComment/:postId/:comId", authentication, deletComment);
+commentRouter.delete("/adminDeleteComment", authentication , authorization , adminDeleteComment);
 
 
 module.exports = commentRouter;
