@@ -238,51 +238,51 @@ const login = (req, res) => {
     .catch((err) => res.status(400).json(err));
 };
 // login with google
-// const googlelogin = (req, res) => {
-//   const { tokenId } = req.body;
+const googlelogin = (req, res) => {
+  const { tokenId } = req.body;
 
-//   clientAuth
-//     .verifyIdToken({
-//       idToken: tokenId,
-//       audience:
-//         "370506827743-5hqo8bs3mk6shn6hmof7be045p8sjkl7.apps.googleusercontent.com",
-//     })
-//     .then((response) => {
-//       const { email_verfied, userName, email } = response.payload;
-//       if (email_verfied) {
-//         userModel.findOne({ email }).exec((err, user) => {
-//           if (err) {
-//             return res.status(400).json({ error: "something went wrong..." });
-//           } else {
-//             if (user) {
-//               const token = jwt.sign(
-//                 { _id: user._id },
-//                 process.env.JWT_SIGNIN_KEY,
-//                 { expiresIn: "7d" }
-//               );
-//               const { _id, userName, email } = user;
-//               res.json({ token, user: { _id, userName, email } });
-//             } else {
-//               let password = email + process.env.JWT_SIGNIN_KEY;
-//               let newUser = new userModel({ userName, email, password });
-//               newUser.save((err, data) => {
-//                 if (err) {
-//                   return res.status(400).json({ error: "somthing wrong..." });
-//                 }
-//                 const token = jwt.sign(
-//                   { _id: data._id },
-//                   process.env.JWT_SIGNIN_KEY,
-//                   { expiresIn: "7d" }
-//                 );
-//                 const { _id, userName, email } = newUser;
-//                 res.json({ token, user: { _id, userName, email } });
-//               });
-//             }
-//           }
-//         });
-//       }
-//     });
-// };
+  clientAuth
+    .verifyIdToken({
+      idToken: tokenId,
+      audience:
+        "370506827743-5hqo8bs3mk6shn6hmof7be045p8sjkl7.apps.googleusercontent.com",
+    })
+    .then((response) => {
+      const { email_verfied, userName, email } = response.payload;
+      if (email_verfied) {
+        userModel.findOne({ email }).exec((err, user) => {
+          if (err) {
+            return res.status(400).json({ error: "something went wrong..." });
+          } else {
+            if (user) {
+              const token = jwt.sign(
+                { _id: user._id },
+                process.env.JWT_SIGNIN_KEY,
+                { expiresIn: "7d" }
+              );
+              const { _id, userName, email } = user;
+              res.json({ token, user: { _id, userName, email } });
+            } else {
+              let password = email + process.env.JWT_SIGNIN_KEY;
+              let newUser = new userModel({ userName, email, password });
+              newUser.save((err, data) => {
+                if (err) {
+                  return res.status(400).json({ error: "somthing wrong..." });
+                }
+                const token = jwt.sign(
+                  { _id: data._id },
+                  process.env.JWT_SIGNIN_KEY,
+                  { expiresIn: "7d" }
+                );
+                const { _id, userName, email } = newUser;
+                res.json({ token, user: { _id, userName, email } });
+              });
+            }
+          }
+        });
+      }
+    });
+};
 
 //get all users
 const getAllUsers = (req, res) => {
@@ -319,7 +319,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   login,
-  // googlelogin,
+  googlelogin,
   getAllUsers,
   deleteUser,
 };
